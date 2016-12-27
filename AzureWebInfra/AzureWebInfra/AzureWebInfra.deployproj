@@ -31,9 +31,9 @@
       <Visible>False</Visible>
     </None>
     <Content Include="Deploy-AzureResourceGroup.ps1" />
+    <None Include="DSC\DSCsources\config.ps1" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="DSC\DSCsources\" />
     <Folder Include="DSC\DSCpackage\" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
