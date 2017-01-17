@@ -1,0 +1,484 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "DeploymentPrefix": {
+      "type": "string",
+      "defaultValue": "SCN4",
+      "metadata": {
+        "description": "Prefix that will we used in resource naming convention"
+      }
+    },
+    "VNet1Location": {
+      "type": "string",
+      "allowedValues": [
+        "West Europe",
+        "North Europe"
+      ],
+      "defaultValue": "West Europe",
+      "metadata": {
+        "description": "Location of Virtual Network 1."
+      }
+    },
+    "VNet1AddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.1.0.0/16",
+      "metadata": {
+        "description": "Address prefix of Virtual Network 1, like 10.1.0.0/8 ou 10.2.0.0/16"
+      }
+    },
+    "Vnet1CoreSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.1.1.0/24",
+      "metadata": {
+        "description": "Address prefix of subnet Core of virtual network 1"
+      }
+    },
+    "Vnet1FrontEndSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.1.2.0/24",
+      "metadata": {
+        "description": "Address prefix of subnet Frontend of virtual network 1"
+      }
+    },
+    "Vnet1BackEndSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.1.3.0/24",
+      "metadata": {
+        "description": "Address prefix of subnet BackEnd of virtual network 1"
+      }
+    },
+    "LocalAdminName": {
+      "type": "string",
+      "defaultValue": "AzureAdmin",
+      "metadata": {
+        "description": "Name of the local admin of the machines"
+      }
+    },
+    "LocalAdminPassword": {
+      "defaultValue": null,
+      "type": "securestring"
+    }
+  },
+  "variables": {
+    "Vnet1RegionShortName": "[replace(parameters('VNet1Location'),' ','')]",
+    "Vnet1Name": "[concat(parameters('DeploymentPrefix'),'-',variables('Vnet1RegionShortName'),'-Vnet')]",
+    "Vnet1GatewayName": "[concat(variables('Vnet1Name'),'-GW')]",
+    "Vnet1GatewayPIPName": "[concat(variables('VNet1GatewayName'),'-PIP')]",
+    "Vnet1ID": "[resourceId('Microsoft.Network/virtualNetworks', variables('Vnet1Name'))]",
+    "SimplifiedPrefix": "[toLower(parameters('DeploymentPrefix'))]",
+    "Location": "[resourceGroup().location]",
+    "SimplifiedLocation": "[tolower(replace(variables('Location'),' ',''))]",
+    "StandardStorageAccountName": "[concat(variables('SimplifiedPrefix'),variables('SimplifiedLocation'),'stdsa')]",
+    "PremiumStorageAccountName": "[concat(variables('SimplifiedPrefix'),variables('SimplifiedLocation'),'prmsa')]",
+    "SQLVMname": "[concat(parameters('DeploymentPrefix'),'-',variables('Location'),'-SQL')]",
+    "WFEVMname": "[concat(parameters('DeploymentPrefix'),'-',variables('Location'),'-WFE')]",
+    "ShortSQLVMname": "[concat('SQL-',variables('Location'))]",
+    "ShortWFEVMname": "[concat('WFE-',variables('Location'))]",
+    "SQLASName": "[concat(variables('SQLVMname'),'-AS')]",
+    "WFEASName": "[concat(variables('WFEVMname'),'-AS')]",
+    "SQLPIPName": "[concat(variables('SQLVMname'),'-PIP')]",
+    "WFEPIPName": "[concat(variables('WFEVMname'),'-PIP')]",
+    "WFEPIPDNSName": "[concat(variables('SimplifiedPrefix'),variables('SimplifiedLocation'),'wfepip')]",
+    "WFENSGName": "[concat(variables('WFEVMname'),'-NSG')]",
+    "SQLNSGName": "[concat(variables('SQLVMname'),'-NSG')]",
+    "WFENicName": "[concat(variables('WFEVMname'),'-NIC')]",
+    "SQLNicName": "[concat(variables('SQLVMname'),'-NIC')]",
+    "SQLSubnetRefId": "[concat(variables('Vnet1ID'),'/subnets/', 'BackEnd')]",
+    "WFESubnetRefId": "[concat(variables('Vnet1ID'),'/subnets/', 'FrontEnd')]",
+    "VaultName": "[concat(variables('SimplifiedPrefix'),'-',variables('SimplifiedLocation'),'-Vault')]",
+    "SkuTier": "Standard",
+    "api-version": "2015-05-01-preview"
+  },
+  "resources": [
+    {
+      "apiVersion": "[variables('api-version')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('Vnet1Name')]",
+      "location": "[parameters('VNet1Location')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('VNet1AddressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "Core",
+            "properties": {
+              "addressPrefix": "[parameters('Vnet1CoreSubnetPrefix')]"
+            }
+          },
+          {
+            "name": "BackEnd",
+            "properties": {
+              "addressPrefix": "[parameters('Vnet1BackendSubnetPrefix')]"
+            }
+          },
+          {
+            "name": "FrontEnd",
+            "properties": {
+              "addressPrefix": "[parameters('Vnet1FrontendSubnetPrefix')]"
+            }
+
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "[variables('api-version')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('Vnet1GatewayPIPName')]",
+      "location": "[parameters('Vnet1Location')]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "kind": "Storage",
+      "name": "[variables('StandardStorageAccountName')]",
+      "apiVersion": "2016-01-01",
+      "location": "[resourceGroup().location]",
+      "tags": {},
+      "properties": {},
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "Premium_LRS",
+        "tier": "Premium"
+      },
+      "kind": "Storage",
+      "name": "[variables('PremiumStorageAccountName')]",
+      "apiVersion": "2016-01-01",
+      "location": "[resourceGroup().location]",
+      "tags": {},
+      "properties": {},
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('SQLASName')]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "platformUpdateDomainCount": 5,
+        "platformFaultDomainCount": 3
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('WFEASName')]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "platformUpdateDomainCount": 5,
+        "platformFaultDomainCount": 3
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('WFEPIPName')]",
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "idleTimeoutInMinutes": 4,
+        "dnsSettings": {
+          "domainNameLabel": "[variables('WFEPIPDNSName')]"
+        }
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('SQLPIPName')]",
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "idleTimeoutInMinutes": 4
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('SQLNSGName')]",
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "default-allow-rdp",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 1000,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('WFENSGName')]",
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "HTTP",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "80",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 1001,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "default-allow-rdp",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 1000,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('WFENicName')]",
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('WFEPIPName'))]"
+              },
+              "subnet": {
+                "id": "[variables('WFESubnetRefId')]"
+              }
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": []
+        },
+        "enableIPForwarding": false,
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('WFENSGName'))]"
+        }
+      },
+      "resources": [],
+      "dependsOn": [
+        "[variables('Vnet1ID')]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('WFEPIPName'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('WFENSGName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('SQLNicName')]",
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('SQLPIPName'))]"
+              },
+              "subnet": {
+                "id": "[variables('SQLSubnetRefId')]"
+              }
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": []
+        },
+        "enableIPForwarding": false,
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('SQLNSGName'))]"
+        }
+      },
+      "resources": [],
+      "dependsOn": [
+        "[variables('Vnet1ID')]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('SQLPIPName'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('SQLNSGName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('ShortSQLVMname')]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('SQLASname'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "Standard_DS1_v2"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftSQLServer",
+            "offer": "SQL2016-WS2016",
+            "sku": "Enterprise",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[variables('SQLVMname')]",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('https', '://', variables('PremiumStorageAccountName'), '.blob.core.windows.net', concat('/vhds/',variables('SQLVMname'),'-osdisk.vhd'))]"
+            },
+            "caching": "ReadWrite"
+          },
+          "dataDisks": [
+            {
+              "lun": 0,
+              "name": "[concat(variables('SQLVMname'),'-datadisk-1')]",
+              "createOption": "Empty",
+              "vhd": {
+                "uri": "[concat('https', '://', variables('PremiumStorageAccountName'), '.blob.core.windows.net', concat('/vhds/', variables('SQLVMname'),'-datadisk-1.vhd'))]"
+              },
+              "caching": "ReadOnly",
+              "diskSizeGB": "1023"
+            }
+          ]
+        },
+        "osProfile": {
+          "computerName": "[variables('ShortSQLVMname')]",
+          "adminUsername": "[parameters('LocalAdminName')]",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "secrets": [],
+          "adminPassword": "[parameters('LocalAdminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('SQLNicName'))]"
+            }
+          ]
+        }
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('SQLASName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('PremiumStorageAccountName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('SQLNicName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('ShortWFEVMname')]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('WFEASname'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "Standard_D1_v2"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2012-R2-Datacenter",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[variables('WFEVMname')]",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('https', '://', variables('StandardStorageAccountName'), '.blob.core.windows.net', concat('/vhds/', variables('WFEVMname'),'-osdisk.vhd'))]"
+            },
+            "caching": "ReadWrite"
+          },
+          "dataDisks": []
+        },
+        "osProfile": {
+          "computerName": "[variables('ShortWFEVMname')]",
+          "adminUsername": "[parameters('LocalAdminName')]",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "secrets": [],
+          "adminPassword": "[parameters('LocalAdminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('WFENicName'))]"
+            }
+          ]
+        }
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('SQLASName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('StandardStorageAccountName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('WFENicName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.RecoveryServices/vaults",
+      "apiVersion": "2015-11-10",
+      "name": "[variables('vaultName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "RS0",
+        "tier": "[variables('skuTier')]"
+      },
+      "properties": {
+      }
+    }
+
+  ]
+}
