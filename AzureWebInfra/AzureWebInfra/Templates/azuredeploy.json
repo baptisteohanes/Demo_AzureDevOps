@@ -9,17 +9,6 @@
         "description": "Prefix that will we used in resource naming convention"
       }
     },
-    "VNet1Location": {
-      "type": "string",
-      "allowedValues": [
-        "West Europe",
-        "North Europe"
-      ],
-      "defaultValue": "West Europe",
-      "metadata": {
-        "description": "Location of Virtual Network 1."
-      }
-    },
     "VNet1AddressPrefix": {
       "type": "string",
       "defaultValue": "10.1.0.0/16",
@@ -61,13 +50,13 @@
     }
   },
   "variables": {
-    "Vnet1RegionShortName": "[replace(parameters('VNet1Location'),' ','')]",
+    "Location": "[resourceGroup().location]",
+    "Vnet1RegionShortName": "[replace(variables('Location'),' ','')]",
     "Vnet1Name": "[concat(parameters('DeploymentPrefix'),'-',variables('Vnet1RegionShortName'),'-Vnet')]",
     "Vnet1GatewayName": "[concat(variables('Vnet1Name'),'-GW')]",
     "Vnet1GatewayPIPName": "[concat(variables('VNet1GatewayName'),'-PIP')]",
     "Vnet1ID": "[resourceId('Microsoft.Network/virtualNetworks', variables('Vnet1Name'))]",
     "SimplifiedPrefix": "[toLower(parameters('DeploymentPrefix'))]",
-    "Location": "[resourceGroup().location]",
     "SimplifiedLocation": "[tolower(replace(variables('Location'),' ',''))]",
     "StandardStorageAccountName": "[concat(variables('SimplifiedPrefix'),variables('SimplifiedLocation'),'stdsa')]",
     "PremiumStorageAccountName": "[concat(variables('SimplifiedPrefix'),variables('SimplifiedLocation'),'prmsa')]",
@@ -95,7 +84,7 @@
       "apiVersion": "[variables('api-version')]",
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('Vnet1Name')]",
-      "location": "[parameters('VNet1Location')]",
+      "location": "[variables('Location')]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
@@ -129,7 +118,7 @@
       "apiVersion": "[variables('api-version')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('Vnet1GatewayPIPName')]",
-      "location": "[parameters('Vnet1Location')]",
+      "location": "[variables('Location')]",
       "properties": {
         "publicIPAllocationMethod": "Dynamic"
       }

@@ -5,9 +5,6 @@
     "DeploymentPrefix": {
       "value": "TEST"
     },
-    "VNet1Location": {
-      "value": "West Europe"
-    },
     "VNet1AddressPrefix": {
       "value": "10.1.0.0/16"
     },
@@ -23,7 +20,7 @@
     "LocalAdminName": {
       "value": "AzureAdmin"
     },
-      "LocalAdminPassword": {
+    "LocalAdminPassword": {
           "value": "JTE@ZUR32017"
       }
   }
