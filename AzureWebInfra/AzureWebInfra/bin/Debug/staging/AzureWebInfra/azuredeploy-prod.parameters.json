@@ -22,6 +22,9 @@
     },
     "LocalAdminName": {
       "value": "AzureAdmin"
-    }
+    },
+      "LocalAdminPassword": {
+          "value": "JTE@ZUR32017"
+      }
   }
  }
