@@ -23,18 +23,18 @@
         "description": "Address prefix of subnet Core of virtual network 1"
       }
     },
-    "Vnet1FrontEndSubnetPrefix": {
-      "type": "string",
-      "defaultValue": "10.1.3.0/24",
-      "metadata": {
-        "description": "Address prefix of subnet Frontend of virtual network 1"
-      }
-    },
     "Vnet1BackEndSubnetPrefix": {
       "type": "string",
       "defaultValue": "10.1.2.0/24",
       "metadata": {
         "description": "Address prefix of subnet BackEnd of virtual network 1"
+      }
+    },
+    "Vnet1FrontEndSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.1.3.0/24",
+      "metadata": {
+        "description": "Address prefix of subnet Frontend of virtual network 1"
       }
     },
     "LocalAdminName": {
@@ -72,10 +72,16 @@
         "description": "SAS Key to access the repo"
       }
     },
+    "DSCFileName": {
+      "type": "string",
+      "metadata": {
+        "description": "File name of the DSC script file, for example RegistrationMetaConfigV2.ps1"
+      }
+    },
     "DSCPackageFileName": {
       "type": "string",
       "metadata": {
-        "description": "File name of the DSC Pachage, for example RegistrationMetaConfigV2.zip"
+        "description": "File name of the DSC Package, for example RegistrationMetaConfigV2.zip"
       }
     },
     "DSCPackageFunctionName": {
@@ -114,7 +120,7 @@
     "SkuTier": "Standard",
     "DSCPackageFullURL": "[concat(parameters('DSCRepoURI'),'/',parameters('DSCPackageFileName'),parameters('DSCRepoKey'))]",
     "DSCFunctionFileIsolator": "\\",
-    "DSCPackageConfigFunction": "[concat(parameters('DSCPackageFileName'),variables('DSCFunctionFileIsolator'),parameters('DSCPackageFunctionName'))]"
+    "DSCPackageConfigFunction": "[concat(parameters('DSCFileName'),variables('DSCFunctionFileIsolator'),parameters('DSCPackageFunctionName'))]"
   },
   "resources": [
     {
