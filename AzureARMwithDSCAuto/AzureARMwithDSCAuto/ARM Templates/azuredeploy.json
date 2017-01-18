@@ -112,7 +112,7 @@
     "SQLSubnetRefId": "[concat(variables('Vnet1ID'),'/subnets/', 'BackEnd')]",
     "WFESubnetRefId": "[concat(variables('Vnet1ID'),'/subnets/', 'FrontEnd')]",
     "SkuTier": "Standard",
-    "DSCPackageFullURL": "[concat(parameters('DSCRepoURI'),'/',parameters('DSCPackageFileName'),'/',parameters('DSCRepoKey'))]",
+    "DSCPackageFullURL": "[concat(parameters('DSCRepoURI'),'/',parameters('DSCPackageFileName'),parameters('DSCRepoKey'))]",
     "DSCFunctionFileIsolator": "\\",
     "DSCPackageConfigFunction": "[concat(parameters('DSCPackageFileName'),variables('DSCFunctionFileIsolator'),parameters('DSCPackageFunctionName'))]"
   },
