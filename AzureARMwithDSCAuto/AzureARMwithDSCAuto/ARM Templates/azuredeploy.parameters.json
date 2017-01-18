@@ -12,10 +12,10 @@
       "value": "10.1.1.0/24"
     },
     "Vnet1FrontEndSubnetPrefix": {
-      "value": "10.1.2.0/24"
+      "value": "10.1.3.0/24"
     },
     "Vnet1BackEndSubnetPrefix": {
-      "value": "10.1.3.0/24"
+      "value": "10.1.2.0/24"
     },
     "LocalAdminName": {
       "value": "AzureAdmin"

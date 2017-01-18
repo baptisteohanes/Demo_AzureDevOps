@@ -25,14 +25,14 @@
     },
     "Vnet1FrontEndSubnetPrefix": {
       "type": "string",
-      "defaultValue": "10.1.2.0/24",
+      "defaultValue": "10.1.3.0/24",
       "metadata": {
         "description": "Address prefix of subnet Frontend of virtual network 1"
       }
     },
     "Vnet1BackEndSubnetPrefix": {
       "type": "string",
-      "defaultValue": "10.1.3.0/24",
+      "defaultValue": "10.1.2.0/24",
       "metadata": {
         "description": "Address prefix of subnet BackEnd of virtual network 1"
       }
@@ -112,7 +112,7 @@
     "SQLSubnetRefId": "[concat(variables('Vnet1ID'),'/subnets/', 'BackEnd')]",
     "WFESubnetRefId": "[concat(variables('Vnet1ID'),'/subnets/', 'FrontEnd')]",
     "SkuTier": "Standard",
-    "DSCPackageFullURL": "[concat(parameters('DSCRepoURI'),'/',parameters('DSCPackageFileName'))]",
+    "DSCPackageFullURL": "[concat(parameters('DSCRepoURI'),'/',parameters('DSCPackageFileName'),'/',parameters('DSCRepoKey'))]",
     "DSCFunctionFileIsolator": "\\",
     "DSCPackageConfigFunction": "[concat(parameters('DSCPackageFileName'),variables('DSCFunctionFileIsolator'),parameters('DSCPackageFunctionName'))]"
   },
