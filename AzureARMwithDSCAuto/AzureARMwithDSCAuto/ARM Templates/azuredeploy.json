@@ -384,7 +384,7 @@
           "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('SQLASname'))]"
         },
         "hardwareProfile": {
-          "vmSize": "Standard_DS1_v2"
+          "vmSize": "Standard_DS3_v2"
         },
         "storageProfile": {
           "imageReference": {
@@ -449,7 +449,7 @@
           "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('WFEASname'))]"
         },
         "hardwareProfile": {
-          "vmSize": "Standard_D1_v2"
+          "vmSize": "Standard_D3_v2"
         },
         "storageProfile": {
           "imageReference": {
