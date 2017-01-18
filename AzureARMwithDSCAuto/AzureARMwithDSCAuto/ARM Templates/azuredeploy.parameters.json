@@ -36,7 +36,7 @@
       "value": null
     },
     "DSCPackageFileName": {
-      "value": "RegistrationMetaConfigV2.zip"
+      "value": "dsc.zip"
     },
     "DSCFileName": {
       "value": "RegistrationMetaConfigV2.ps1"
