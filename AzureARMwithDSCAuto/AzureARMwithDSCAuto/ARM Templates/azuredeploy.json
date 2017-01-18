@@ -67,7 +67,7 @@
       }
     },
     "DSCRepoKey": {
-      "type": "string",
+      "type": "securestring",
       "metadata": {
         "description": "SAS Key to access the repo"
       }

@@ -28,6 +28,18 @@
     },
     "registrationUrl": {
       "value": "https://we-agentservice-prod-1.azure-automation.net/accounts/3a0e788d-53bb-401e-a629-17464657b39a"
+    },
+    "DSCRepoURI": {
+      "value": "https://jagdscrepo.blob.core.windows.net/dscautorepo"
+    },
+    "DSCRepoKey": {
+      "value": null
+    },
+    "DSCPackageFileName": {
+      "value": "RegistrationMetaConfigV2.ps1"
+    },
+    "DSCPackageFunctionName": {
+      "value": "RegistrationMetaConfigV2"
     }
   }
 }
