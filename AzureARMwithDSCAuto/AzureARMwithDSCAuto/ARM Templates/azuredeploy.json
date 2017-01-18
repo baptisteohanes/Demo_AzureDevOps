@@ -75,7 +75,7 @@
     "DSCPackageFileName": {
       "type": "string",
       "metadata": {
-        "description": "File name of the DSC Pachage, for example RegistrationMetaConfigV2.ps1"
+        "description": "File name of the DSC Pachage, for example RegistrationMetaConfigV2.zip"
       }
     },
     "DSCPackageFunctionName": {
