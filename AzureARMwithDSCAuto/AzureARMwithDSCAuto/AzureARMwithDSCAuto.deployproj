@@ -31,7 +31,10 @@
       <Visible>False</Visible>
     </None>
     <Content Include="Deploy-AzureResourceGroup.ps1" />
-    <None Include="DSC packages\RegistrationMetaConfigV2.ps1" />
+    <None Include="DSC Sources\RegistrationMetaConfigV2.ps1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="DSC Package\" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
 </Project>
