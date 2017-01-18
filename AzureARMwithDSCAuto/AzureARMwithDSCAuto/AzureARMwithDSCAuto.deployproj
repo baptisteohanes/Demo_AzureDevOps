@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>af3cbc7a-a735-46b2-a34a-76d6ccbed012</ProjectGuid>
+    <ProjectGuid>3eef909c-a639-48e2-9528-6d01ea35622a</ProjectGuid>
   </PropertyGroup>
   <PropertyGroup>
     <TargetFrameworkIdentifier>Deployment</TargetFrameworkIdentifier>
@@ -25,15 +25,15 @@
   <Import Condition=" Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Deployment\1.1\DeploymentProject.targets') " Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Deployment\1.1\DeploymentProject.targets" />
   <!-- vertag<:>end -->
   <ItemGroup>
-    <Content Include="Templates\azuredeploy.json" />
-    <Content Include="Templates\azuredeploy.parameters.json" />
+    <Content Include="ARM Templates\azuredeploy.json" />
+    <Content Include="ARM Templates\azuredeploy.parameters.json" />
     <None Include="Deployment.targets">
       <Visible>False</Visible>
     </None>
     <Content Include="Deploy-AzureResourceGroup.ps1" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="DSC\" />
+    <None Include="DSC\RegistrationMetaConfigV2.zip">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
 </Project>
