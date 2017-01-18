@@ -570,7 +570,7 @@
         }
       ],
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/availabilitySets', variables('SQLASName'))]",
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('WFEASName'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('StandardStorageAccountName'))]",
         "[resourceId('Microsoft.Network/networkInterfaces', variables('WFENicName'))]"
       ]
