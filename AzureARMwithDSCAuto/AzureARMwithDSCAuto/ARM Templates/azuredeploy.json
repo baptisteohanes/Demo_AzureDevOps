@@ -586,11 +586,11 @@
   "outputs": {
     "DSCPackageFullURLOutput": {
       "type": "string",
-      "value": "variables('DSCPackageFullURL')"
+      "value": "[variables('DSCPackageFullURL')]"
     },
     "DSCRepoKeyOutput": {
       "type": "string",
-      "value": "variables('DSCRepoKey')"
+      "value": "[parameters('DSCRepoKey')]"
     }
   }
 }
