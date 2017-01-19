@@ -169,21 +169,6 @@
     {
       "type": "Microsoft.Storage/storageAccounts",
       "sku": {
-        "name": "Standard_LRS",
-        "tier": "Standard"
-      },
-      "kind": "Storage",
-      "name": "[variables('StandardStorageAccountName')]",
-      "apiVersion": "2016-01-01",
-      "location": "[resourceGroup().location]",
-      "tags": {},
-      "properties": {},
-      "resources": [],
-      "dependsOn": []
-    },
-    {
-      "type": "Microsoft.Storage/storageAccounts",
-      "sku": {
         "name": "Premium_LRS",
         "tier": "Premium"
       },
