@@ -118,7 +118,7 @@
     "SQLSubnetRefId": "[concat(variables('Vnet1ID'),'/subnets/', 'BackEnd')]",
     "WFESubnetRefId": "[concat(variables('Vnet1ID'),'/subnets/', 'FrontEnd')]",
     "SkuTier": "Standard",
-    "DSCPackageFullURL": "[concat(parameters('DSCRepoURI'),'/',parameters('DSCPackageFileName'),parameters('DSCRepoKey'))]",
+    "DSCPackageFullURL": "[concat(parameters('DSCRepoURI'),'/',parameters('DSCPackageFileName'))]",
     "DSCFunctionFileIsolator": "\\",
     "DSCPackageConfigFunction": "[concat(parameters('DSCFileName'),variables('DSCFunctionFileIsolator'),parameters('DSCPackageFunctionName'))]"
   },
@@ -468,7 +468,7 @@
             "name": "[variables('WFEVMname')]",
             "createOption": "FromImage",
             "vhd": {
-              "uri": "[concat('https', '://', variables('StandardStorageAccountName'), '.blob.core.windows.net', concat('/vhds/', variables('WFEVMname'),'-osdisk.vhd'))]"
+              "uri": "[concat('https', '://', variables('PremiumStorageAccountName'), '.blob.core.windows.net', concat('/vhds/', variables('WFEVMname'),'-osdisk.vhd'))]"
             },
             "caching": "ReadWrite"
           },
@@ -507,6 +507,7 @@
             "settings": {
               "modulesUrl": "[variables('DSCPackageFullURL')]",
               "configurationFunction": "[variables('DSCPackageConfigFunction')]",
+              "SasToken": "[parameters('DSCRepoKey')]",
               "Properties": [
                 {
                   "Name": "RegistrationKey",
@@ -577,7 +578,7 @@
       ],
       "dependsOn": [
         "[resourceId('Microsoft.Compute/availabilitySets', variables('WFEASName'))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', variables('StandardStorageAccountName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('PremiumStorageAccountName'))]",
         "[resourceId('Microsoft.Network/networkInterfaces', variables('WFENicName'))]"
       ]
     }
