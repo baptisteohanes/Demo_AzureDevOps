@@ -347,7 +347,7 @@
           "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('SQLASname'))]"
         },
         "hardwareProfile": {
-          "vmSize": "Standard_DS1_v2"
+          "vmSize": "Standard_DS3_v2"
         },
         "storageProfile": {
           "imageReference": {
@@ -412,7 +412,7 @@
           "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('WFEASname'))]"
         },
         "hardwareProfile": {
-          "vmSize": "Standard_D1_v2"
+          "vmSize": "Standard_D3_v2"
         },
         "storageProfile": {
           "imageReference": {
@@ -451,7 +451,7 @@
       },
       "resources": [],
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/availabilitySets', variables('SQLASName'))]",
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('WFEASName'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('StandardStorageAccountName'))]",
         "[resourceId('Microsoft.Network/networkInterfaces', variables('WFENicName'))]"
       ]
