@@ -455,7 +455,7 @@
           "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('WFEASname'))]"
         },
         "hardwareProfile": {
-          "vmSize": "Standard_D3_v2"
+          "vmSize": "Standard_DS3_v2"
         },
         "storageProfile": {
           "imageReference": {
