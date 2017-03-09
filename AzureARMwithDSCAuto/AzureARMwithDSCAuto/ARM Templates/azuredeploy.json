@@ -37,6 +37,13 @@
         "description": "Address prefix of subnet Frontend of virtual network 1"
       }
     },
+    "NumberOfWFE": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "Number of Web-Front End servers that will be provisionned"
+      }
+    },
     "LocalAdminName": {
       "type": "string",
       "defaultValue": "AzureAdmin",
@@ -109,11 +116,17 @@
     "SQLASName": "[concat(variables('SQLVMname'),'-AS')]",
     "WFEASName": "[concat(variables('WFEVMname'),'-AS')]",
     "SQLPIPName": "[concat(variables('SQLVMname'),'-PIP')]",
-    "WFEPIPName": "[concat(variables('WFEVMname'),'-PIP')]",
-    "WFEPIPDNSName": "[concat(variables('SimplifiedPrefix'),variables('SimplifiedLocation'),'wfepip')]",
+    "WFENLBName": "[concat(parameters('DeploymentPrefix'),'-WFE-NLB')]",
+    "WFENLBPIPName": "[concat(variables('WFENLBName'),'-PIP')]",
+    "WFENLBPIPDNSName": "[concat(variables('SimplifiedPrefix'),variables('SimplifiedLocation'),'wfepip')]",
+    "lbID": "[resourceId('Microsoft.Network/loadBalancers',variables('WFENLBName'))]",
+    "frontendAddressPoolName": "FrontEndPool",
+    "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/',variables('frontendAddressPoolName'))]",
+    "backendAddressPoolName": "BackEndPool",
+    "lbPoolID": "[concat(variables('lbID'),'/backendAddressPools/',variables('backendAddressPoolName'))]",
+    "lbProbeID": "[concat(variables('lbID'),'/probes/tcpProbe')]",
     "WFENSGName": "[concat(variables('WFEVMname'),'-NSG')]",
     "SQLNSGName": "[concat(variables('SQLVMname'),'-NSG')]",
-    "WFENicName": "[concat(variables('WFEVMname'),'-NIC')]",
     "SQLNicName": "[concat(variables('SQLVMname'),'-NIC')]",
     "SQLSubnetRefId": "[concat(variables('Vnet1ID'),'/subnets/', 'BackEnd')]",
     "WFESubnetRefId": "[concat(variables('Vnet1ID'),'/subnets/', 'FrontEnd')]",
@@ -207,14 +220,14 @@
     },
     {
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('WFEPIPName')]",
+      "name": "[variables('WFENLBPIPName')]",
       "apiVersion": "2016-03-30",
       "location": "[resourceGroup().location]",
       "properties": {
         "publicIPAllocationMethod": "Dynamic",
         "idleTimeoutInMinutes": 4,
         "dnsSettings": {
-          "domainNameLabel": "[variables('WFEPIPDNSName')]"
+          "domainNameLabel": "[variables('WFENLBPIPDNSName')]"
         }
       },
       "resources": [],
@@ -296,19 +309,78 @@
       "dependsOn": []
     },
     {
+      "apiVersion": "2015-06-15",
+      "name": "[variables('WFENLBName')]",
+      "type": "Microsoft.Network/loadBalancers",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('WFENLBPIPName'))]"
+      ],
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "[variables('frontendAddressPoolName')]",
+            "properties": {
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/PublicIPAddresses', variables('WFENLBPIPName'))]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "[variables('backendAddressPoolName')]"
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "Web",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[variables('frontEndIPConfigID')]"
+              },
+              "backendAddressPool": {
+                "id": "[variables('lbPoolID')]"
+              },
+              "protocol": "Tcp",
+              "frontendPort": 80,
+              "backendPort": 80,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 5,
+              "probe": {
+                "id": "[variables('lbProbeID')]"
+              }
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "tcpProbe",
+            "properties": {
+              "protocol": "Tcp",
+              "port": 80,
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2
+            }
+          }
+        ]
+      }
+    },
+    {
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[variables('WFENicName')]",
+      "name": "[concat(variables('ShortWFEVMName'),copyIndex(),'-NIC')]",
       "apiVersion": "2016-03-30",
       "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "NICcopy",
+        "count": "[parameters('NumberOfWFE')]"
+      },
       "properties": {
         "ipConfigurations": [
           {
             "name": "ipconfig1",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('WFEPIPName'))]"
-              },
               "subnet": {
                 "id": "[variables('WFESubnetRefId')]"
               }
@@ -321,13 +393,18 @@
         "enableIPForwarding": false,
         "networkSecurityGroup": {
           "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('WFENSGName'))]"
-        }
+        },
+        "loadBalancerBackendAddressPools": [
+          {
+            "id": "[concat(variables('lbID'), '/backendAddressPools/',variables('backendAddressPoolName'))]"
+          }
+        ]
       },
       "resources": [],
       "dependsOn": [
         "[variables('Vnet1ID')]",
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('WFEPIPName'))]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('WFENSGName'))]"
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('WFENSGName'))]",
+        "[variables('lbID')]"
       ]
     },
     {
@@ -432,9 +509,13 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[variables('ShortWFEVMname')]",
+      "name": "[concat(variables('ShortWFEVMname'),copyIndex())]",
       "apiVersion": "2015-06-15",
       "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "WFEcopy",
+        "count": "[parameters('NumberOfWFE')]"
+      },
       "properties": {
         "availabilitySet": {
           "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('WFEASname'))]"
@@ -450,17 +531,17 @@
             "version": "latest"
           },
           "osDisk": {
-            "name": "[variables('WFEVMname')]",
+            "name": "[concat(variables('ShortWFEVMname'),copyIndex())]",
             "createOption": "FromImage",
             "vhd": {
-              "uri": "[concat('https', '://', variables('PremiumStorageAccountName'), '.blob.core.windows.net', concat('/vhds/', variables('WFEVMname'),'-osdisk.vhd'))]"
+              "uri": "[concat('https', '://', variables('PremiumStorageAccountName'), '.blob.core.windows.net', concat('/vhds/', variables('ShortWFEVMname'),copyIndex(),'-','-osdisk.vhd'))]"
             },
             "caching": "ReadWrite"
           },
           "dataDisks": []
         },
         "osProfile": {
-          "computerName": "[variables('ShortWFEVMname')]",
+          "computerName": "[concat(variables('ShortWFEVMname'),copyIndex())]",
           "adminUsername": "[parameters('LocalAdminName')]",
           "windowsConfiguration": {
             "provisionVMAgent": true,
@@ -472,7 +553,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('WFENicName'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('ShortWFEVMName'),copyIndex(),'-NIC'))]"
             }
           ]
         }
@@ -557,25 +638,25 @@
             }
           },
           "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', variables('ShortWFEVMname'))]"
+            "[resourceId('Microsoft.Compute/virtualMachines', concat(variables('ShortWFEVMname'),copyIndex()))]"
           ]
         }
       ],
       "dependsOn": [
         "[resourceId('Microsoft.Compute/availabilitySets', variables('WFEASName'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('PremiumStorageAccountName'))]",
-        "[resourceId('Microsoft.Network/networkInterfaces', variables('WFENicName'))]"
+        "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('ShortWFEVMName'),copyIndex(),'-NIC'))]"
       ]
     }
   ],
   "outputs": {
-    "DSCPackageFullURLOutput": {
-      "type": "string",
-      "value": "[variables('DSCPackageFullURL')]"
-    },
-    "DSCRepoKeyOutput": {
-      "type": "string",
-      "value": "[parameters('DSCRepoKey')]"
+        "DSCPackageFullURLOutput": {
+          "type": "string",
+          "value": "[variables('DSCPackageFullURL')]"
+        },
+        "DSCRepoKeyOutput": {
+          "type": "string",
+          "value": "[parameters('DSCRepoKey')]"
+        }
+      }
     }
-  }
-}

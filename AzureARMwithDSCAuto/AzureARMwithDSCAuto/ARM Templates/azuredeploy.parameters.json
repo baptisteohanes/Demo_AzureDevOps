@@ -20,20 +20,14 @@
     "LocalAdminName": {
       "value": "AzureAdmin"
     },
-    "LocalAdminPassword": {
-      "value": "JT3@ZUR32017"
-    },
-    "registrationKey": {
-      "value": "ZD9E3mcs20P03t9EevYlVHj1AWp5ZLSBVyGFJScIUE2Ypc8+TvneuzB8y5AAEsFoRhQBw3CWqedr1qNNGPgC7A=="
+    "NumberOfWFE": {
+      "value": 2
     },
     "registrationUrl": {
       "value": "https://we-agentservice-prod-1.azure-automation.net/accounts/3a0e788d-53bb-401e-a629-17464657b39a"
     },
     "DSCRepoURI": {
       "value": "https://jagdscrepo.blob.core.windows.net/dscautorepo"
-    },
-    "DSCRepoKey": {
-      "value": null
     },
     "DSCPackageFileName": {
       "value": "dsc.zip"
