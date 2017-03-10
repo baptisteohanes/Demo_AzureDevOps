@@ -21,7 +21,7 @@
       "value": "AzureAdmin"
     },
     "NumberOfWFE": {
-      "value": 2
+      "value": 1
     },
     "registrationUrl": {
       "value": "https://we-agentservice-prod-1.azure-automation.net/accounts/3a0e788d-53bb-401e-a629-17464657b39a"
