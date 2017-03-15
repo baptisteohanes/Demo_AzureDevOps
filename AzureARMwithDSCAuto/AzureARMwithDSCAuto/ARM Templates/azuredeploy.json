@@ -383,7 +383,12 @@
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
                 "id": "[variables('WFESubnetRefId')]"
-              }
+              },
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[concat(variables('lbID'), '/backendAddressPools/',variables('backendAddressPoolName'))]"
+                }
+              ]
             }
           }
         ],
@@ -393,12 +398,7 @@
         "enableIPForwarding": false,
         "networkSecurityGroup": {
           "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('WFENSGName'))]"
-        },
-        "loadBalancerBackendAddressPools": [
-          {
-            "id": "[concat(variables('lbID'), '/backendAddressPools/',variables('backendAddressPoolName'))]"
-          }
-        ]
+        }
       },
       "resources": [],
       "dependsOn": [
