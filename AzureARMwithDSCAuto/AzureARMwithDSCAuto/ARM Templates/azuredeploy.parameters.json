@@ -27,7 +27,12 @@
       "value": "https://we-agentservice-prod-1.azure-automation.net/accounts/3a0e788d-53bb-401e-a629-17464657b39a"
     },
     "registrationKey": {
-      "value": "ZD9E3mcs20P03t9EevYlVHj1AWp5ZLSBVyGFJScIUE2Ypc8+TvneuzB8y5AAEsFoRhQBw3CWqedr1qNNGPgC7A=="
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/60d99c90-627d-42a0-9211-10505f0f4175/resourceGroups/JazureGraveMgmt/providers/Microsoft.KeyVault/vaults/JazureGraveKeyVault"
+        },
+        "secretName": "DSCauto-RegistrationKey"
+      }
     },
     "DSCRepoURI": {
       "value": "https://jagdscrepo.blob.core.windows.net/dscautorepo"

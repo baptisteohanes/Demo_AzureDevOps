@@ -141,6 +141,8 @@
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('Vnet1Name')]",
       "location": "[variables('Location')]",
+      "tags": { "displayName": "Vnet" },
+      "comments": "This virtual network will be used by all the components of this specific deployment",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
@@ -171,15 +173,6 @@
       }
     },
     {
-      "apiVersion": "2016-03-30",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('Vnet1GatewayPIPName')]",
-      "location": "[variables('Location')]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic"
-      }
-    },
-    {
       "type": "Microsoft.Storage/storageAccounts",
       "sku": {
         "name": "Premium_LRS",
@@ -189,7 +182,8 @@
       "name": "[variables('PremiumStorageAccountName')]",
       "apiVersion": "2016-01-01",
       "location": "[resourceGroup().location]",
-      "tags": {},
+      "tags": { "displayName": "Storage Account" },
+      "comments": "This storage account will be used to store the disks of the VM of this specific deployment",
       "properties": {},
       "resources": [],
       "dependsOn": []
@@ -197,6 +191,8 @@
     {
       "type": "Microsoft.Compute/availabilitySets",
       "name": "[variables('SQLASName')]",
+      "tags": { "displayName": "Availability Set - SQL Server" },
+      "comments": "This availability set aggregates the SQL servers of this specific deployment",
       "apiVersion": "2015-06-15",
       "location": "[resourceGroup().location]",
       "properties": {
@@ -210,6 +206,8 @@
       "type": "Microsoft.Compute/availabilitySets",
       "name": "[variables('WFEASName')]",
       "apiVersion": "2015-06-15",
+      "tags": { "displayName": "Availability Set - Web Front-End" },
+      "comments": "This availability set aggregates the web font-end servers of this specific deployment",
       "location": "[resourceGroup().location]",
       "properties": {
         "platformUpdateDomainCount": 5,
@@ -223,6 +221,8 @@
       "name": "[variables('WFENLBPIPName')]",
       "apiVersion": "2016-03-30",
       "location": "[resourceGroup().location]",
+      "tags": { "displayName": "Public IP - WFE load-balancer" },
+      "comments": "This public IP publishes the load-balancer in front of the web font-end servers of this specific deployment",
       "properties": {
         "publicIPAllocationMethod": "Dynamic",
         "idleTimeoutInMinutes": 4,
@@ -234,38 +234,14 @@
       "dependsOn": []
     },
     {
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('SQLPIPName')]",
-      "apiVersion": "2016-03-30",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "idleTimeoutInMinutes": 4
-      },
-      "resources": [],
-      "dependsOn": []
-    },
-    {
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[variables('SQLNSGName')]",
       "apiVersion": "2016-03-30",
       "location": "[resourceGroup().location]",
+      "tags": { "displayName": "Network Security Group - SQL" },
+      "comments": "This is used to secure access to the SQL VM from internet",
       "properties": {
-        "securityRules": [
-          {
-            "name": "default-allow-rdp",
-            "properties": {
-              "protocol": "Tcp",
-              "sourcePortRange": "*",
-              "destinationPortRange": "3389",
-              "sourceAddressPrefix": "*",
-              "destinationAddressPrefix": "*",
-              "access": "Allow",
-              "priority": 1000,
-              "direction": "Inbound"
-            }
-          }
-        ]
+        "securityRules": []
       },
       "resources": [],
       "dependsOn": []
@@ -275,6 +251,8 @@
       "name": "[variables('WFENSGName')]",
       "apiVersion": "2016-03-30",
       "location": "[resourceGroup().location]",
+      "tags": { "displayName": "Network Security Group - WFE" },
+      "comments": "This public IP publishes the load-balancer in front of the web font-end servers of this specific deployment",
       "properties": {
         "securityRules": [
           {
@@ -313,6 +291,8 @@
       "name": "[variables('WFENLBName')]",
       "type": "Microsoft.Network/loadBalancers",
       "location": "[resourceGroup().location]",
+      "tags": { "displayName": "Azure Load-balancer - WFE" },
+      "comments": "This public IP publishes the load-balancer in front of the web font-end servers of this specific deployment",
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('WFENLBPIPName'))]"
       ],
@@ -368,9 +348,44 @@
     },
     {
       "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('SQLNicName')]",
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "tags": { "displayName": "NIC - SQL Server" },
+      "comments": "This NIC is plugged to the SQL server of this specific deployment",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('SQLSubnetRefId')]"
+              }
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": []
+        },
+        "enableIPForwarding": false,
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('SQLNSGName'))]"
+        }
+      },
+      "resources": [],
+      "dependsOn": [
+        "[variables('Vnet1ID')]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('SQLNSGName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
       "name": "[concat(variables('ShortWFEVMName'),copyIndex(),'-NIC')]",
       "apiVersion": "2016-03-30",
       "location": "[resourceGroup().location]",
+      "tags": { "displayName": "NIC - Web Front-end Servers - Looped" },
+      "comments": "This NIC is plugged to the web font-end servers of this specific deployment",
       "copy": {
         "name": "NICcopy",
         "count": "[parameters('NumberOfWFE')]"
@@ -408,45 +423,12 @@
       ]
     },
     {
-      "type": "Microsoft.Network/networkInterfaces",
-      "name": "[variables('SQLNicName')]",
-      "apiVersion": "2016-03-30",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "ipconfig1",
-            "properties": {
-              "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('SQLPIPName'))]"
-              },
-              "subnet": {
-                "id": "[variables('SQLSubnetRefId')]"
-              }
-            }
-          }
-        ],
-        "dnsSettings": {
-          "dnsServers": []
-        },
-        "enableIPForwarding": false,
-        "networkSecurityGroup": {
-          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('SQLNSGName'))]"
-        }
-      },
-      "resources": [],
-      "dependsOn": [
-        "[variables('Vnet1ID')]",
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('SQLPIPName'))]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('SQLNSGName'))]"
-      ]
-    },
-    {
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[variables('ShortSQLVMname')]",
       "apiVersion": "2015-06-15",
       "location": "[resourceGroup().location]",
+      "tags": { "displayName": "VM - SQL Server" },
+      "comments": "This is the VM hosting SQL Server",
       "properties": {
         "availabilitySet": {
           "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('SQLASname'))]"
@@ -512,6 +494,8 @@
       "name": "[concat(variables('ShortWFEVMname'),copyIndex())]",
       "apiVersion": "2015-06-15",
       "location": "[resourceGroup().location]",
+      "tags": { "displayName": "VM - WFE Servers - Looped" },
+      "comments": "This is the VM hosting SQL Server",
       "copy": {
         "name": "WFEcopy",
         "count": "[parameters('NumberOfWFE')]"
@@ -564,7 +548,8 @@
           "name": "Microsoft.Powershell.DSC",
           "apiVersion": "2016-03-30",
           "location": "[variables('Location')]",
-          "tags": {},
+          "tags": { "displayName": "VM Extension - DSC MetaConfiguration" },
+          "comments": "This extension is used to push the metaconfiguration file to the VM to set the VM to register with the Azure Automation push server",
           "properties": {
             "publisher": "Microsoft.Powershell",
             "type": "DSC",
