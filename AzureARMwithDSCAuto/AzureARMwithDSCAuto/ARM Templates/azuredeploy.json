@@ -101,18 +101,16 @@
   "variables": {
     "Location": "[resourceGroup().location]",
     "Vnet1RegionShortName": "[replace(variables('Location'),' ','')]",
-    "Vnet1Name": "[concat(parameters('DeploymentPrefix'),'-',variables('Vnet1RegionShortName'),'-Vnet')]",
+    "Vnet1Name": "[concat(parameters('DeploymentPrefix'),'-Vnet')]",
     "Vnet1ID": "[resourceId('Microsoft.Network/virtualNetworks', variables('Vnet1Name'))]",
     "SimplifiedPrefix": "[toLower(parameters('DeploymentPrefix'))]",
     "SimplifiedLocation": "[tolower(replace(variables('Location'),' ',''))]",
-    "SQLVMname": "[concat(parameters('DeploymentPrefix'),'-',variables('Location'),'-SQL')]",
-    "WFEVMname": "[concat(parameters('DeploymentPrefix'),'-',variables('Location'),'-WFE')]",
     "ShortSQLVMname": "[concat(parameters('DeploymentPrefix'),'-SQL')]",
     "ShortWFEVMname": "[concat(parameters('DeploymentPrefix'),'-WFE')]",
-    "SQLASName": "[concat(variables('SQLVMname'),'-AS')]",
-    "WFEASName": "[concat(variables('WFEVMname'),'-AS')]",
+    "SQLASName": "[concat(variables('ShortSQLVMname'),'-AS')]",
+    "WFEASName": "[concat(variables('ShortWFEVMname'),'-AS')]",
     "SQLDataDiskName": "[concat(variables('ShortSQLVMname'),'-Data')]",
-    "SQLPIPName": "[concat(variables('SQLVMname'),'-PIP')]",
+    "SQLPIPName": "[concat(variables('ShortSQLVMname'),'-PIP')]",
     "WFENLBName": "[concat(parameters('DeploymentPrefix'),'-WFE-NLB')]",
     "WFENLBPIPName": "[concat(variables('WFENLBName'),'-PIP')]",
     "WFENLBPIPDNSName": "[concat(variables('SimplifiedPrefix'),variables('SimplifiedLocation'),'wfepip')]",
@@ -122,9 +120,9 @@
     "backendAddressPoolName": "BackEndPool",
     "lbPoolID": "[concat(variables('lbID'),'/backendAddressPools/',variables('backendAddressPoolName'))]",
     "lbProbeID": "[concat(variables('lbID'),'/probes/tcpProbe')]",
-    "WFENSGName": "[concat(variables('WFEVMname'),'-NSG')]",
-    "SQLNSGName": "[concat(variables('SQLVMname'),'-NSG')]",
-    "SQLNicName": "[concat(variables('SQLVMname'),'-NIC')]",
+    "WFENSGName": "[concat(variables('ShortWFEVMname'),'-NSG')]",
+    "SQLNSGName": "[concat(variables('ShortSQLVMname'),'-NSG')]",
+    "SQLNicName": "[concat(variables('ShortSQLVMname'),'-NIC')]",
     "SQLSubnetRefId": "[concat(variables('Vnet1ID'),'/subnets/', 'BackEnd')]",
     "WFESubnetRefId": "[concat(variables('Vnet1ID'),'/subnets/', 'FrontEnd')]",
     "SkuTier": "Standard",
@@ -174,14 +172,12 @@
       "name": "[variables('SQLASName')]",
       "tags": { "displayName": "Availability Set - SQL Server" },
       "comments": "This availability set aggregates the SQL servers of this specific deployment",
-      "apiVersion": "2015-06-15",
+      "apiVersion": "2016-04-30-preview",
       "location": "[resourceGroup().location]",
       "properties": {
         "platformUpdateDomainCount": 5,
-        "platformFaultDomainCount": 3
-      },
-      "sku": {
-        "name": "Aligned"
+        "platformFaultDomainCount": 3,
+        "managed": true
       },
       "resources": [],
       "dependsOn": []
@@ -189,16 +185,14 @@
     {
       "type": "Microsoft.Compute/availabilitySets",
       "name": "[variables('WFEASName')]",
-      "apiVersion": "2015-06-15",
+      "apiVersion": "2016-04-30-preview",
       "tags": { "displayName": "Availability Set - Web Front-End" },
       "comments": "This availability set aggregates the web font-end servers of this specific deployment",
       "location": "[resourceGroup().location]",
       "properties": {
         "platformUpdateDomainCount": 5,
-        "platformFaultDomainCount": 3
-      },
-      "sku": {
-        "name": "Aligned"
+        "platformFaultDomainCount": 3,
+        "managed": true
       },
       "resources": [],
       "dependsOn": []
@@ -449,51 +443,51 @@
             "osType": "Windows",
             "caching": "ReadWrite",
             "createOption": "FromImage",
-            "name": "OSDisk",
+            "name": "[concat(variables('ShortSQLVMname'),'-OS')]",
             "managedDisk": {
               "storageAccountType": "Premium_LRS"
-            },
-            "dataDisks": [
-              {
-                "lun": 0,
-                "managedDisk": {
-                  "id": "[resourceId('Microsoft.Compute/disks', variables('SQLDataDiskName'))]"
-                },
-                "caching": "None",
-                "createOption": "Attach"
-              }
-            ]
+            }
           },
-          "osProfile": {
-            "computerName": "[variables('ShortSQLVMname')]",
-            "adminUsername": "[parameters('LocalAdminName')]",
-            "windowsConfiguration": {
-              "provisionVMAgent": true,
-              "enableAutomaticUpdates": true
-            },
-            "secrets": [],
-            "adminPassword": "[parameters('LocalAdminPassword')]"
-          },
-          "networkProfile": {
-            "networkInterfaces": [
-              {
-                "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('SQLNicName'))]"
-              }
-            ]
-          }
+          "dataDisks": [
+            {
+              "lun": 0,
+              "managedDisk": {
+                "id": "[resourceId('Microsoft.Compute/disks', variables('SQLDataDiskName'))]"
+              },
+              "caching": "None",
+              "createOption": "Attach"
+            }
+          ]
         },
-        "resources": [],
-        "dependsOn": [
-          "[resourceId('Microsoft.Compute/availabilitySets', variables('SQLASName'))]",
-          "[resourceId('Microsoft.Compute/disks', variables('SQLDataDiskName'))]",
-          "[resourceId('Microsoft.Network/networkInterfaces', variables('SQLNicName'))]"
-        ]
-      }
+        "osProfile": {
+          "computerName": "[variables('ShortSQLVMname')]",
+          "adminUsername": "[parameters('LocalAdminName')]",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "secrets": [],
+          "adminPassword": "[parameters('LocalAdminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('SQLNicName'))]"
+            }
+          ]
+        }
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('SQLASName'))]",
+        "[resourceId('Microsoft.Compute/disks', variables('SQLDataDiskName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('SQLNicName'))]"
+      ]
     },
     {
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[concat(variables('ShortWFEVMname'),copyIndex())]",
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "2016-04-30-preview",
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "VM - WFE Servers - Looped" },
       "comments": "This is the VM hosting SQL Server",
@@ -522,9 +516,9 @@
             "name": "[concat(variables('ShortWFEVMname'),copyIndex(),'-OS')]",
             "managedDisk": {
               "storageAccountType": "Standard_LRS"
-            },
-            "dataDisks": []
-          }
+            }
+          },
+          "dataDisks": []
         },
         "osProfile": {
           "computerName": "[concat(variables('ShortWFEVMname'),copyIndex())]",
@@ -636,13 +630,13 @@
     }
   ],
   "outputs": {
-          "DSCPackageFullURLOutput": {
-            "type": "string",
-            "value": "[variables('DSCPackageFullURL')]"
-          },
-          "DSCRepoKeyOutput": {
-            "type": "string",
-            "value": "[parameters('DSCRepoKey')]"
-          }
-        }
+    "DSCPackageFullURLOutput": {
+      "type": "string",
+      "value": "[variables('DSCPackageFullURL')]"
+    },
+    "DSCRepoKeyOutput": {
+      "type": "string",
+      "value": "[parameters('DSCRepoKey')]"
+    }
+  }
 }
