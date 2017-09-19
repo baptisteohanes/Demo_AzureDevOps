@@ -435,8 +435,8 @@
         "storageProfile": {
           "imageReference": {
             "publisher": "MicrosoftSQLServer",
-            "offer": "SQL2016-WS2016",
-            "sku": "Enterprise",
+            "offer": "SQL2016SP1-WS2016",
+            "sku": "Standard",
             "version": "latest"
           },
           "osDisk": {
