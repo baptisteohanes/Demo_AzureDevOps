@@ -621,6 +621,28 @@
           "dependsOn": [
             "[resourceId('Microsoft.Compute/virtualMachines', concat(variables('ShortWFEVMname'),copyIndex()))]"
           ]
+        },
+        {
+          "name": "Microsoft.Powershell.DSC",
+          "properties": {
+            "publisher": "Microsoft.Powershell",
+            "type": "DSC",
+            "typeHandlerVersion": "2.20",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "configuration": {
+                "url": "[variables('DSCPackageFullURL')]",
+                "script": "parameters('DSCFileName')",
+                "function": "[parameters('DSCPackageFunctionName')]"
+              },
+              "configurationArguments": {
+                "nodeName": "localhost"
+              }
+            },
+            "protectedSettings": {
+              "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
+            }
+          }
         }
       ],
       "dependsOn": [
